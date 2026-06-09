@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="روزنامچہ">
+<title>روزنامچہ — Urdu Journal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+:root {
+  --bg:#f5f5f7;--card:#fff;--card-border:#e5e7eb;--card-shadow:0 1px 3px rgba(0,0,0,0.08);
+  --accent:#4f46e5;--accent-light:#ede9fe;--accent-border:#c4b5fd;
+  --green:#16a34a;--green-light:#dcfce7;--green-border:#86efac;
+  --red:#ef4444;--red-light:#fef2f2;--red-border:#fecaca;
+  --blue:#2563eb;--blue-light:#eff6ff;--blue-border:#93c5fd;
+  --text:#1c1c1e;--text-dim:#6b7280;--text-faint:#9ca3af;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column;position:fixed;inset:0}
+
+/* HEADER */
+header{flex-shrink:0;padding:calc(var(--safe-top) + 12px) 18px 12px;background:#fff;
+  border-bottom:1px solid var(--card-border);display:flex;align-items:center;
+  justify-content:space-between;box-shadow:0 1px 0 rgba(0,0,0,0.05)}
+.logo h1{font-size:20px;font-weight:700;color:var(--accent);font-family:'Noto Nastaliq Urdu',serif}
+.logo p{font-size:10px;color:var(--text-faint);letter-spacing:2px;text-transform:uppercase;direction:ltr;margin-top:1px}
+.api-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--accent-border);
+  background:var(--accent-light);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer}
+.api-btn.set{background:var(--green-light);border-color:var(--green-border);color:var(--green)}
+
+/* TABS */
+nav{flex-shrink:0;display:flex;background:#fff;border-bottom:1px solid var(--card-border);padding:0 16px}
+nav button{flex:1;padding:11px 4px;background:transparent;border:none;
+  border-bottom:2.5px solid transparent;color:var(--text-dim);font-size:13px;
+  font-weight:500;cursor:pointer;transition:all 0.2s}
+nav button.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* PAGES */
+main{flex:1;overflow:hidden;position:relative;background:var(--bg)}
+.page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:18px 16px calc(var(--safe-bottom) + 20px);opacity:0;pointer-events:none;transition:opacity 0.2s}
+.page.active{opacity:1;pointer-events:all}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:16px;
+  padding:16px;margin-bottom:12px;box-shadow:var(--card-shadow)}
+.lbl{font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;
+  letter-spacing:0.8px;margin-bottom:10px;direction:ltr;text-align:left}
+
+/* INPUTS */
+textarea{width:100%;background:transparent;border:none;outline:none;resize:none;
+  color:var(--text);font-size:16px;line-height:1.7;font-family:'Inter',sans-serif}
+textarea.urdu{font-family:'Noto Nastaliq Urdu',serif;font-size:17px;line-height:2.6;direction:rtl;text-align:right}
+textarea::placeholder{color:var(--text-faint)}
+input[type=date]{width:100%;background:transparent;border:none;outline:none;
+  font-size:16px;color:var(--text);font-family:'Inter',sans-serif;direction:ltr}
+
+/* BUTTONS */
+.btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:15px;
+  font-weight:600;cursor:pointer;transition:all 0.2s;margin-bottom:10px;font-family:'Inter',sans-serif}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(79,70,229,0.3)}
+.btn-primary:disabled{background:#c4b5fd;box-shadow:none;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--bg);border:1px solid var(--card-border);color:var(--text-dim)}
+.btn-urdu{font-family:'Noto Nastaliq Urdu',serif}
+
+/* MODE TOGGLE */
+.mode-toggle{display:flex;gap:8px;margin-bottom:12px}
+.mode-btn{flex:1;padding:10px;border-radius:12px;font-size:13px;font-weight:600;
+  cursor:pointer;border:1px solid var(--card-border);background:var(--bg);
+  color:var(--text-dim);transition:all 0.2s;font-family:'Inter',sans-serif}
+.mode-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* PHOTOS */
+.photo-row{display:flex;gap:10px;flex-wrap:wrap;direction:ltr;margin-top:10px}
+.photo-add{width:76px;height:76px;border-radius:12px;border:1.5px dashed var(--accent-border);
+  background:var(--accent-light);color:var(--accent);cursor:pointer;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
+.photo-add .icon{font-size:22px}.photo-add .txt{font-size:10px;font-weight:500}
+.photo-wrap{position:relative;display:inline-block}
+.photo-thumb{width:76px;height:76px;border-radius:12px;object-fit:cover;border:1px solid var(--card-border);cursor:pointer}
+.photo-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;
+  background:var(--red);color:#fff;border:2px solid #fff;cursor:pointer;font-size:10px;
+  display:flex;align-items:center;justify-content:center}
+
+/* LOADING */
+.loading-wrap{margin-bottom:12px}
+.loading-bar{height:3px;background:var(--accent-light);border-radius:3px;overflow:hidden}
+.loading-bar-fill{height:100%;width:35%;background:var(--accent);border-radius:3px;
+  animation:slide 1.2s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(370%)}}
+.loading-txt{text-align:center;color:var(--accent);font-size:13px;font-weight:500;margin-top:8px}
+
+/* PROMPT BOX (fallback) */
+.prompt-wrap{background:var(--accent-light);border:1.5px solid var(--accent-border);
+  border-radius:14px;padding:16px;margin-bottom:12px}
+.prompt-wrap .prompt-label{font-size:12px;font-weight:600;color:var(--accent);
+  margin-bottom:10px;direction:ltr;text-align:left}
+.prompt-wrap pre{font-size:12px;color:var(--text-dim);white-space:pre-wrap;
+  line-height:1.7;font-family:monospace;word-break:break-word;direction:ltr;text-align:left;
+  max-height:160px;overflow-y:auto}
+.claude-link{display:block;text-align:center;background:var(--accent);color:#fff;
+  border-radius:12px;padding:12px;font-weight:600;font-size:14px;text-decoration:none;margin-bottom:10px}
+
+/* ENTRY LIST */
+.entry-list{display:flex;flex-direction:column;gap:10px}
+.entry-card{background:var(--card);border:1px solid var(--card-border);border-radius:16px;
+  padding:16px;cursor:pointer;box-shadow:var(--card-shadow);transition:all 0.15s}
+.entry-card:active{transform:scale(0.99)}
+.entry-date{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:6px}
+.entry-preview{font-size:14px;color:var(--text-dim);line-height:2.2;overflow:hidden;
+  direction:rtl;text-align:right;font-family:'Noto Nastaliq Urdu',serif;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.entry-photos-row{display:flex;gap:6px;margin-top:10px;direction:ltr}
+.entry-photo-mini{width:42px;height:42px;border-radius:8px;object-fit:cover;border:1px solid var(--card-border)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-faint);font-size:14px;line-height:2}
+.empty-icon{font-size:48px;margin-bottom:12px}
+
+/* DETAIL */
+.detail-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.back-btn{padding:8px 14px;background:var(--bg);border:1px solid var(--card-border);
+  color:var(--text-dim);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;font-family:'Inter',sans-serif}
+.del-btn{padding:8px 14px;background:var(--red-light);border:1px solid var(--red-border);
+  color:var(--red);border-radius:10px;cursor:pointer;font-size:12px;font-weight:500;font-family:'Inter',sans-serif}
+.detail-date{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:16px}
+.detail-photos{display:flex;gap:10px;flex-wrap:wrap;direction:ltr;margin-bottom:16px}
+.detail-photo{flex:1;min-width:120px;max-width:48%;border-radius:14px;object-fit:cover;
+  border:1px solid var(--card-border);cursor:pointer;aspect-ratio:4/3}
+.detail-text{font-size:17px;line-height:2.8;direction:rtl;text-align:right;color:var(--text);
+  white-space:pre-wrap;margin-bottom:20px;font-family:'Noto Nastaliq Urdu',serif}
+.notes-box{background:var(--bg);border:1px solid var(--card-border);border-radius:12px;padding:14px}
+.notes-lbl{font-size:10px;font-weight:600;color:var(--text-faint);text-transform:uppercase;
+  letter-spacing:0.8px;margin-bottom:8px;direction:ltr}
+.notes-txt{font-size:13px;color:var(--text-dim);line-height:1.8;white-space:pre-wrap;direction:ltr}
+
+/* PROFILE */
+.section-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;direction:ltr}
+.section-sub{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;direction:ltr}
+.stats-row{display:flex;gap:10px;margin-bottom:14px}
+.stat-box{flex:1;background:var(--card);border:1px solid var(--card-border);border-radius:14px;
+  padding:14px;text-align:center;box-shadow:var(--card-shadow)}
+.stat-num{font-size:26px;font-weight:700;color:var(--accent)}
+.stat-lbl{font-size:11px;color:var(--text-faint);margin-top:3px;font-weight:500}
+.ai-learned{font-size:14px;color:var(--text-dim);line-height:2.4;direction:rtl;text-align:right;
+  font-family:'Noto Nastaliq Urdu',serif;min-height:50px;white-space:pre-wrap}
+.action-row{display:flex;gap:8px;margin-bottom:10px}
+.action-btn{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;border:none}
+
+/* API MODAL */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.4);
+  backdrop-filter:blur(8px);display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity 0.25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px calc(var(--safe-bottom) + 24px);width:100%}
+.modal-handle{width:36px;height:4px;background:#e5e7eb;border-radius:4px;margin:0 auto 18px}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:6px;direction:ltr}
+.modal p{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:14px;direction:ltr}
+.modal input{width:100%;padding:13px 14px;background:var(--bg);border:1.5px solid var(--card-border);
+  border-radius:12px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;
+  direction:ltr;font-family:monospace}
+.modal input:focus{border-color:var(--accent)}
+.modal-note{background:var(--accent-light);border:1px solid var(--accent-border);border-radius:10px;
+  padding:12px;margin-bottom:14px;font-size:12px;color:var(--text-dim);line-height:1.7;direction:ltr}
+.modal-note b{color:var(--accent)}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.93);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.2s}
+.lightbox.open{opacity:1;pointer-events:all}
+.lightbox img{max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain}
+.lb-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.15);
+  border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:20px;
+  display:flex;align-items:center;justify-content:center}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--safe-bottom) + 20px);left:50%;
+  transform:translateX(-50%) translateY(80px);background:#1c1c1e;border-radius:12px;
+  padding:10px 22px;color:#fff;font-size:13px;font-weight:500;z-index:50;
+  transition:transform 0.3s,opacity 0.3s;white-space:nowrap;opacity:0}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="api-btn" id="apiBtn" onclick="openApiModal()">🔑 API Key</button>
+  <div class="logo">
+    <h1>روزنامچہ</h1>
+    <p>Urdu Journal</p>
+  </div>
+</header>
+
+<nav>
+  <button id="tab-write" class="active" onclick="switchTab('write')">✍️ Write</button>
+  <button id="tab-diary" onclick="switchTab('diary')">📖 Diary</button>
+  <button id="tab-profile" onclick="switchTab('profile')">👤 Profile</button>
+</nav>
+
+<main>
+
+  <!-- WRITE PAGE -->
+  <div class="page active" id="page-write">
+
+    <div class="card">
+      <div class="lbl">Date</div>
+      <input type="date" id="entryDate">
+    </div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeAI" onclick="setMode('ai')">🤖 AI writes</button>
+      <button class="mode-btn" id="modePaste" onclick="setMode('paste')">✍️ Paste Urdu</button>
+    </div>
+
+    <!-- AI MODE -->
+    <div id="aiMode">
+      <div class="card">
+        <div class="lbl">Today's bullet points (English)</div>
+        <textarea id="bulletsInput" rows="7" placeholder="- Morning walk in the park&#10;- Important meeting at work&#10;- Had dinner with family&#10;- Felt grateful today"></textarea>
+      </div>
+      <div class="card">
+        <div class="lbl">Photos (optional) 📸</div>
+        <div class="photo-row" id="photoRow">
+          <button class="photo-add" onclick="document.getElementById('photoInput').click()">
+            <span class="icon">＋</span><span class="txt">Photo</span>
+          </button>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="addPhotos(event,'main')">
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-wrap" id="loadingWrap" style="display:none">
+        <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+        <div class="loading-txt">Writing your Urdu diary entry...</div>
+      </div>
+
+      <!-- Fallback prompt (shown when no API key) -->
+      <div id="promptWrap" style="display:none">
+        <div class="prompt-wrap">
+          <div class="prompt-label" style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:10px;direction:ltr;text-align:left">📋 Copy this prompt → paste in Claude.ai</div>
+          <pre id="promptText"></pre>
+        </div>
+        <button class="btn btn-primary" onclick="copyPrompt()">📋 Copy Prompt</button>
+        <a href="https://claude.ai" target="_blank" class="claude-link">Open Claude.ai ↗</a>
+        <div class="card" style="margin-top:4px">
+          <div class="lbl">Paste Claude's Urdu reply here</div>
+          <textarea id="fallbackUrdu" rows="8" class="urdu" placeholder="آج کا دن..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-urdu" onclick="saveFallbackEntry()">ڈائری محفوظ کریں 💾</button>
+        <button class="btn btn-secondary" onclick="hideFallback()">← Back</button>
+      </div>
+
+      <button class="btn btn-primary btn-urdu" id="writeBtn" onclick="writeEntry()">ڈائری لکھیں ✦</button>
+    </div>
+
+    <!-- PASTE MODE -->
+    <div id="pasteMode" style="display:none">
+      <div class="card">
+        <div class="lbl">Paste Urdu diary text</div>
+        <textarea id="pasteUrdu" rows="10" class="urdu" placeholder="آج کا دن..."></textarea>
+      </div>
+      <div class="card">
+        <div class="lbl">Original notes (optional)</div>
+        <textarea id="pasteBullets" rows="4" placeholder="- Any notes you wrote"></textarea>
+      </div>
+      <div class="card">
+        <div class="lbl">Photos (optional) 📸</div>
+        <div class="photo-row" id="photoRowPaste">
+          <button class="photo-add" onclick="document.getElementById('photoInputPaste').click()">
+            <span class="icon">＋</span><span class="txt">Photo</span>
+          </button>
+        </div>
+        <input type="file" id="photoInputPaste" accept="image/*" multiple style="display:none" onchange="addPhotos(event,'paste')">
+      </div>
+      <button class="btn btn-primary btn-urdu" onclick="savePasteEntry()">ڈائری محفوظ کریں 💾</button>
+    </div>
+
+  </div>
+
+  <!-- DIARY LIST -->
+  <div class="page" id="page-diary">
+    <div class="entry-list" id="entryList"></div>
+  </div>
+
+  <!-- ENTRY DETAIL -->
+  <div class="page" id="page-detail">
+    <div class="detail-hdr">
+      <button class="del-btn" onclick="deleteEntry()">🗑 Delete</button>
+      <button class="back-btn" onclick="switchTab('diary')">← Back</button>
+    </div>
+    <div class="detail-date" id="detailDate"></div>
+    <div class="detail-photos" id="detailPhotos"></div>
+    <div class="detail-text" id="detailText"></div>
+    <div class="notes-box">
+      <div class="notes-lbl">Original Notes</div>
+      <div class="notes-txt" id="detailBullets"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page" id="page-profile">
+    <p class="section-title">About Me</p>
+    <p class="section-sub">Claude uses this to personalise your diary. Write anything about yourself.</p>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" id="statEntries">0</div><div class="stat-lbl">Entries</div></div>
+      <div class="stat-box"><div class="stat-num" id="statPhotos">0</div><div class="stat-lbl">Photos</div></div>
+      <div class="stat-box"><div class="stat-num" id="statDays">0</div><div class="stat-lbl">Days</div></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">About Me</div>
+      <textarea id="profileInput" rows="7"
+        placeholder="- I live in Penzberg, Germany&#10;- Senior scientist at Roche&#10;- PhD in Biophysics&#10;- Have two kids Ismail and Taha&#10;- Passionate about Islam and science"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+
+    <div class="card">
+      <div class="lbl">What Claude has learned about me</div>
+      <div class="ai-learned" id="aiLearnedBox">Write some diary entries and Claude will learn about you automatically.</div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn" style="background:var(--green-light);color:var(--green)" onclick="exportData()">📤 Export Backup</button>
+      <button class="action-btn" style="background:var(--blue-light);color:var(--blue)" onclick="document.getElementById('importFile').click()">📥 Import Backup</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn" style="background:var(--red-light);border:1px solid var(--red-border);color:var(--red)" onclick="confirmClear()">⚠️ Clear All Data</button>
+  </div>
+
+</main>
+
+<!-- API KEY MODAL -->
+<div class="overlay" id="apiOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>🔑 Anthropic API Key</h2>
+    <p>For automatic AI writing. Your key stays on this device only.</p>
+    <div class="modal-note">
+      Get a free key at <b>console.anthropic.com</b><br>
+      <span style="font-size:11px;opacity:0.7">Without a key the app will generate a prompt for you to use in Claude.ai instead</span>
+    </div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+    <button class="btn btn-primary" style="margin-bottom:8px" onclick="saveApiKey()">Save Key</button>
+    <button class="btn btn-secondary" onclick="closeApiModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lb-close">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let entries=[], profile='', aiProfile='';
+let pendingPhotos=[], pendingPhotosPaste=[];
+let activeEntryId=null;
+
+// ── STORAGE ──
+function save(){
+  try{localStorage.setItem('roz_e',JSON.stringify(entries))}catch(e){}
+  try{localStorage.setItem('roz_p',profile)}catch(e){}
+  try{localStorage.setItem('roz_ai',aiProfile)}catch(e){}
+}
+function load(){
+  try{const e=localStorage.getItem('roz_e');if(e)entries=JSON.parse(e)}catch(e){}
+  try{const p=localStorage.getItem('roz_p');if(p){profile=p;document.getElementById('profileInput').value=p}}catch(e){}
+  try{const a=localStorage.getItem('roz_ai');if(a)aiProfile=a}catch(e){}
+}
+function getKey(){return localStorage.getItem('roz_key')||''}
+function setKey(k){localStorage.setItem('roz_key',k);updateApiBtn()}
+function updateApiBtn(){
+  const b=document.getElementById('apiBtn');
+  if(getKey()){b.textContent='🔑 Key ✓';b.className='api-btn set'}
+  else{b.textContent='🔑 API Key';b.className='api-btn'}
+}
+
+// ── TABS ──
+function switchTab(tab){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+(tab==='detail'?'diary':tab))?.classList.add('active');
+  document.getElementById('page-'+tab).classList.add('active');
+  if(tab==='diary')renderList();
+  if(tab==='profile')renderProfile();
+}
+
+// ── MODE ──
+let currentMode='ai';
+function setMode(m){
+  currentMode=m;
+  document.getElementById('aiMode').style.display=m==='ai'?'block':'none';
+  document.getElementById('pasteMode').style.display=m==='paste'?'block':'none';
+  document.getElementById('modeAI').classList.toggle('active',m==='ai');
+  document.getElementById('modePaste').classList.toggle('active',m==='paste');
+}
+
+// ── AI ──
+async function callClaude(messages,system){
+  const key=getKey();
+  if(!key)throw new Error('no_key');
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,
+      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,system,messages})
+  });
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message);
+  return data.content?.map(b=>b.text||'').join('')||'';
+}
+
+function buildSystem(){
+  const ctx=[];
+  if(profile)ctx.push('About me:\n'+profile);
+  if(aiProfile)ctx.push('What you have learned about me:\n'+aiProfile);
+  const extra=ctx.length?'\n\n'+ctx.join('\n\n'):'';
+  return `You are a personal Urdu diary writer. The user gives bullet points in English and you write a beautiful, emotional, flowing Urdu diary entry.${extra}
+
+Rules:
+- Pure natural Urdu only
+- Warm personal sincere tone like a private diary
+- Start with آج کا دن or آج میں نے
+- Include emotions not just facts
+- 3-5 paragraphs
+- Output only the diary text nothing else`;
+}
+
+function buildPrompt(bullets){
+  const ctx=[];
+  if(profile)ctx.push('About me:\n'+profile);
+  if(aiProfile)ctx.push('What Claude has learned:\n'+aiProfile);
+  const extra=ctx.length?'\n\n'+ctx.join('\n\n'):'';
+  return `You are a personal Urdu diary writer. Write a beautiful emotional flowing Urdu diary entry from these bullet points.${extra}
+
+Rules:
+- Pure natural Urdu only
+- Warm personal sincere tone like a private diary  
+- Start with آج کا دن or آج میں نے
+- Include emotions not just facts
+- 3-5 paragraphs
+- Output only the diary text
+
+Bullet points:
+${bullets}`;
+}
+
+async function updateAiProfile(urdu,bullets){
+  try{
+    const sys=`You learn about a person from diary entries and maintain a concise profile of important lasting facts (hobbies, family, work, personality). Current profile:\n${aiProfile||'Empty'}\n\nUpdate profile from new entry. Concise bullet points. Output only the updated profile.`;
+    aiProfile=await callClaude([{role:'user',content:`Bullets: ${bullets}\n\nDiary:\n${urdu}`}],sys);
+    save();
+  }catch(e){}
+}
+
+// ── WRITE ENTRY (AI) ──
+async function writeEntry(){
+  const bullets=document.getElementById('bulletsInput').value.trim();
+  if(!bullets){showToast('Please write some bullet points first');return}
+
+  if(!getKey()){
+    // fallback mode
+    document.getElementById('promptText').textContent=buildPrompt(bullets);
+    document.getElementById('promptWrap').style.display='block';
+    document.getElementById('writeBtn').style.display='none';
+    return;
+  }
+
+  const btn=document.getElementById('writeBtn');
+  const wrap=document.getElementById('loadingWrap');
+  btn.disabled=true; wrap.style.display='block';
+
+  try{
+    const urdu=await callClaude([{role:'user',content:'Write my diary from these bullet points:\n'+bullets}],buildSystem());
+    const photos=await Promise.all(pendingPhotos.map(compress));
+    const dateVal=document.getElementById('entryDate').value;
+    const entry={id:Date.now(),date:dateVal?new Date(dateVal).toISOString():new Date().toISOString(),bullets,urduText:urdu,photos};
+    entries.unshift(entry); save();
+    updateAiProfile(urdu,bullets);
+    document.getElementById('bulletsInput').value='';
+    pendingPhotos=[]; renderPhotos('main');
+    activeEntryId=entry.id; showToast('Diary saved ✓'); openDetail(entry);
+  }catch(e){
+    if(e.message==='no_key')openApiModal();
+    else showToast('Error — please try again');
+  }
+  btn.disabled=false; wrap.style.display='none';
+}
+
+function hideFallback(){
+  document.getElementById('promptWrap').style.display='none';
+  document.getElementById('writeBtn').style.display='block';
+}
+
+function copyPrompt(){
+  const t=document.getElementById('promptText').textContent;
+  navigator.clipboard?.writeText(t).then(()=>showToast('Prompt copied ✓')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    showToast('Prompt copied ✓');
+  });
+}
+
+async function saveFallbackEntry(){
+  const urdu=document.getElementById('fallbackUrdu').value.trim();
+  if(!urdu){showToast('Please paste the Urdu diary text first');return}
+  const bullets=document.getElementById('bulletsInput').value.trim();
+  const photos=await Promise.all(pendingPhotos.map(compress));
+  const dateVal=document.getElementById('entryDate').value;
+  const entry={id:Date.now(),date:dateVal?new Date(dateVal).toISOString():new Date().toISOString(),bullets,urduText:urdu,photos};
+  entries.unshift(entry); save();
+  document.getElementById('bulletsInput').value='';
+  document.getElementById('fallbackUrdu').value='';
+  pendingPhotos=[]; renderPhotos('main');
+  hideFallback();
+  activeEntryId=entry.id; showToast('Diary saved ✓'); openDetail(entry);
+}
+
+// ── PASTE MODE ──
+async function savePasteEntry(){
+  const urdu=document.getElementById('pasteUrdu').value.trim();
+  if(!urdu){showToast('Please paste your Urdu diary text');return}
+  const bullets=document.getElementById('pasteBullets').value.trim();
+  const photos=await Promise.all(pendingPhotosPaste.map(compress));
+  const dateVal=document.getElementById('entryDate').value;
+  const entry={id:Date.now(),date:dateVal?new Date(dateVal).toISOString():new Date().toISOString(),bullets,urduText:urdu,photos};
+  entries.unshift(entry); save();
+  document.getElementById('pasteUrdu').value='';
+  document.getElementById('pasteBullets').value='';
+  pendingPhotosPaste=[]; renderPhotos('paste');
+  activeEntryId=entry.id; showToast('Diary saved ✓'); openDetail(entry);
+}
+
+// ── PHOTOS ──
+function addPhotos(e,mode){
+  Array.from(e.target.files).forEach(file=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      if(mode==='main'){pendingPhotos.push(ev.target.result);renderPhotos('main')}
+      else{pendingPhotosPaste.push(ev.target.result);renderPhotos('paste')}
+    };
+    r.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+function renderPhotos(mode){
+  const id=mode==='main'?'photoRow':'photoRowPaste';
+  const arr=mode==='main'?pendingPhotos:pendingPhotosPaste;
+  const inputId=mode==='main'?'photoInput':'photoInputPaste';
+  const row=document.getElementById(id);
+  const btn=row.querySelector('.photo-add');
+  row.innerHTML='';
+  arr.forEach((p,i)=>{
+    const wrap=document.createElement('div');wrap.className='photo-wrap';
+    const img=document.createElement('img');img.className='photo-thumb';img.src=p;
+    img.onclick=()=>openLightbox(p);
+    const del=document.createElement('button');del.className='photo-del';del.innerHTML='✕';
+    del.onclick=()=>{arr.splice(i,1);renderPhotos(mode)};
+    wrap.appendChild(del);wrap.appendChild(img);row.appendChild(wrap);
+  });
+  row.appendChild(btn);
+}
+async function compress(dataUrl){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      const max=800;let w=img.width,h=img.height;
+      if(w>max){h=h*max/w;w=max}if(h>max){w=w*max/h;h=max}
+      c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',0.72));
+    };img.src=dataUrl;
+  });
+}
+
+// ── ENTRY LIST ──
+function renderList(){
+  const list=document.getElementById('entryList');
+  if(!entries.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">📖</div>No diary entries yet<br><small>Go to Write to get started</small></div>';
+    return;
+  }
+  list.innerHTML=entries.map(e=>`
+    <div class="entry-card" onclick="openDetail(getEntry(${e.id}))">
+      <div class="entry-date">${fmtDate(e.date)}</div>
+      <div class="entry-preview">${e.urduText}</div>
+      ${e.photos?.length?'<div class="entry-photos-row">'+e.photos.map(p=>`<img class="entry-photo-mini" src="${p}">`).join('')+'</div>':''}
+    </div>`).join('');
+}
+function getEntry(id){return entries.find(e=>e.id===id)}
+function openDetail(entry){
+  if(!entry)return;
+  activeEntryId=entry.id;
+  document.getElementById('detailDate').textContent=fmtDate(entry.date);
+  document.getElementById('detailText').textContent=entry.urduText;
+  document.getElementById('detailBullets').textContent=entry.bullets||'—';
+  const ph=document.getElementById('detailPhotos');
+  if(entry.photos?.length){
+    ph.innerHTML=entry.photos.map(p=>`<img class="detail-photo" src="${p}" onclick="openLightbox('${p}')">`).join('');
+    ph.style.display='flex';
+  }else{ph.style.display='none';ph.innerHTML=''}
+  switchTab('detail');
+}
+function deleteEntry(){
+  if(!confirm('Delete this entry?'))return;
+  entries=entries.filter(e=>e.id!==activeEntryId);
+  save();showToast('Entry deleted');switchTab('diary');
+}
+
+// ── PROFILE ──
+function saveProfile(){
+  profile=document.getElementById('profileInput').value.trim();
+  save();showToast('Profile saved ✓');
+}
+function renderProfile(){
+  document.getElementById('profileInput').value=profile;
+  document.getElementById('statEntries').textContent=entries.length;
+  document.getElementById('statPhotos').textContent=entries.reduce((a,e)=>a+(e.photos?.length||0),0);
+  document.getElementById('statDays').textContent=new Set(entries.map(e=>e.date.split('T')[0])).size;
+  document.getElementById('aiLearnedBox').textContent=aiProfile||'Write some diary entries and Claude will learn about you automatically.';
+}
+function confirmClear(){
+  if(confirm('Delete all entries and profile data?')){
+    entries=[];profile='';aiProfile='';
+    ['roz_e','roz_p','roz_ai'].forEach(k=>localStorage.removeItem(k));
+    document.getElementById('profileInput').value='';
+    renderProfile();showToast('All data cleared');
+  }
+}
+
+// ── EXPORT / IMPORT ──
+function exportData(){
+  const data={version:2,exported:new Date().toISOString(),entries,profile,aiProfile};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download='roznamcha-backup-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();URL.revokeObjectURL(url);
+  showToast('Backup exported ✓');
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.entries){showToast('Invalid backup file');return}
+      if(!confirm(`Import ${data.entries.length} entries? Will merge with existing.`))return;
+      const ids=new Set(entries.map(e=>e.id));
+      const newE=data.entries.filter(e=>!ids.has(e.id));
+      entries=[...entries,...newE].sort((a,b)=>new Date(b.date)-new Date(a.date));
+      if(data.profile&&!profile)profile=data.profile;
+      if(data.aiProfile&&!aiProfile)aiProfile=data.aiProfile;
+      save();renderProfile();showToast(`Imported ${newE.length} new entries ✓`);
+    }catch(err){showToast('Could not read backup file')}
+  };
+  r.readAsText(file);e.target.value='';
+}
+
+// ── API MODAL ──
+function openApiModal(){document.getElementById('apiKeyInput').value=getKey();document.getElementById('apiOverlay').classList.add('open')}
+function closeApiModal(){document.getElementById('apiOverlay').classList.remove('open')}
+function saveApiKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(!k){showToast('Key is empty');return}
+  setKey(k);closeApiModal();showToast('API Key saved ✓');
+}
+document.getElementById('apiOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('apiOverlay'))closeApiModal()});
+
+// ── LIGHTBOX ──
+function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('open')}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open')}
+
+// ── TOAST ──
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── DATE ──
+function fmtDate(iso){return new Date(iso).toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+
+// ── INIT ──
+load(); updateApiBtn();
+const n=new Date();
+document.getElementById('entryDate').value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+</script>
+</body>
+</html>
