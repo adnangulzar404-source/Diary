@@ -362,6 +362,30 @@ input[type=date]{width:100%;background:transparent;border:none;outline:none;
 
 <div class="toast" id="toast"></div>
 
+<!-- AUTO EXPORT BANNER -->
+<div id="exportBanner" style="display:none;position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
+  left:14px;right:14px;z-index:60;background:#fff;border:1.5px solid #86efac;border-radius:18px;
+  padding:16px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.12);direction:ltr">
+  <div style="font-size:14px;font-weight:600;color:#16a34a;margin-bottom:4px">💾 Back up your diary?</div>
+  <div style="font-size:12px;color:#6b7280;margin-bottom:12px">You have written 5 entries — save a backup to avoid losing data</div>
+  <div style="display:flex;gap:8px">
+    <button onclick="exportData();hideExportBanner()" style="flex:1;padding:10px;background:#16a34a;border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:13px">📤 Export Now</button>
+    <button onclick="hideExportBanner()" style="padding:10px 16px;background:#f3f4f6;border:none;border-radius:10px;color:#6b7280;cursor:pointer;font-size:13px">Later</button>
+  </div>
+</div>
+
+<!-- RECOVERY BANNER -->
+<div id="recoveryBanner" style="display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);
+  left:14px;right:14px;z-index:60;background:#fff;border:1.5px solid #93c5fd;border-radius:18px;
+  padding:16px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.12);direction:ltr">
+  <div style="font-size:14px;font-weight:600;color:#2563eb;margin-bottom:4px">⚠️ Previous data not found</div>
+  <div style="font-size:12px;color:#6b7280;margin-bottom:12px">It looks like you may have data from a previous session. Import your backup file to restore it.</div>
+  <div style="display:flex;gap:8px">
+    <button onclick="document.getElementById('importFile').click();hideRecoveryBanner()" style="flex:1;padding:10px;background:#2563eb;border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:13px">📥 Import Backup</button>
+    <button onclick="hideRecoveryBanner()" style="padding:10px 16px;background:#f3f4f6;border:none;border-radius:10px;color:#6b7280;cursor:pointer;font-size:13px">Dismiss</button>
+  </div>
+</div>
+
 <script>
 // ── STATE ──
 let entries=[], profile='', aiProfile='';
@@ -369,15 +393,52 @@ let pendingPhotos=[], pendingPhotosPaste=[];
 let activeEntryId=null;
 
 // ── STORAGE ──
+// Triple save: localStorage + sessionStorage + cookie (for iOS PWA persistence)
 function save(){
-  try{localStorage.setItem('roz_e',JSON.stringify(entries))}catch(e){}
+  const eStr=JSON.stringify(entries);
+  // 1. localStorage
+  try{localStorage.setItem('roz_e',eStr)}catch(e){}
   try{localStorage.setItem('roz_p',profile)}catch(e){}
   try{localStorage.setItem('roz_ai',aiProfile)}catch(e){}
+  // 2. sessionStorage
+  try{sessionStorage.setItem('roz_e',eStr)}catch(e){}
+  try{sessionStorage.setItem('roz_p',profile)}catch(e){}
+  try{sessionStorage.setItem('roz_ai',aiProfile)}catch(e){}
+  // 3. Cookie (survives PWA/Safari switching, 1 year expiry)
+  // Only store a hash/flag in cookie — actual data in localStorage
+  try{
+    const exp=new Date();exp.setFullYear(exp.getFullYear()+1);
+    document.cookie='roz_has_data=1;expires='+exp.toUTCString()+';path=/;SameSite=Lax';
+    document.cookie='roz_count='+entries.length+';expires='+exp.toUTCString()+';path=/;SameSite=Lax';
+  }catch(e){}
+  // 4. Auto-export every 5 entries as safety net
+  if(entries.length>0 && entries.length%5===0) showAutoExportBanner();
 }
+
 function load(){
-  try{const e=localStorage.getItem('roz_e');if(e)entries=JSON.parse(e)}catch(e){}
-  try{const p=localStorage.getItem('roz_p');if(p){profile=p;document.getElementById('profileInput').value=p}}catch(e){}
-  try{const a=localStorage.getItem('roz_ai');if(a)aiProfile=a}catch(e){}
+  // Try localStorage first, then sessionStorage as fallback
+  let eStr=null;
+  try{eStr=localStorage.getItem('roz_e')}catch(e){}
+  if(!eStr){try{eStr=sessionStorage.getItem('roz_e')}catch(e){}}
+  if(eStr){try{entries=JSON.parse(eStr)}catch(e){}}
+
+  let p=null;
+  try{p=localStorage.getItem('roz_p')}catch(e){}
+  if(!p){try{p=sessionStorage.getItem('roz_p')}catch(e){}}
+  if(p){profile=p;try{document.getElementById('profileInput').value=p}catch(e){}}
+
+  let a=null;
+  try{a=localStorage.getItem('roz_ai')}catch(e){}
+  if(!a){try{a=sessionStorage.getItem('roz_ai')}catch(e){}}
+  if(a)aiProfile=a;
+
+  // Show recovery banner if cookie says we had data but localStorage is empty
+  try{
+    const hasCookie=document.cookie.includes('roz_has_data=1');
+    if(hasCookie && entries.length===0){
+      setTimeout(()=>showRecoveryBanner(),800);
+    }
+  }catch(e){}
 }
 function getKey(){return localStorage.getItem('roz_key')||''}
 function setKey(k){localStorage.setItem('roz_key',k);updateApiBtn()}
@@ -691,6 +752,12 @@ function showToast(msg){
 
 // ── DATE ──
 function fmtDate(iso){return new Date(iso).toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+
+// ── BANNERS ──
+function showAutoExportBanner(){document.getElementById('exportBanner').style.display='block'}
+function hideExportBanner(){document.getElementById('exportBanner').style.display='none'}
+function showRecoveryBanner(){document.getElementById('recoveryBanner').style.display='block'}
+function hideRecoveryBanner(){document.getElementById('recoveryBanner').style.display='none'}
 
 // ── INIT ──
 load(); updateApiBtn();
