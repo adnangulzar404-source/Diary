@@ -412,7 +412,7 @@ function save(){
     document.cookie='roz_count='+entries.length+';expires='+exp.toUTCString()+';path=/;SameSite=Lax';
   }catch(e){}
   // 4. Auto-export every 5 entries as safety net
-  if(entries.length>0 && entries.length%5===0) showAutoExportBanner();
+  // auto-backup handled per entry;
 }
 
 function load(){
@@ -552,7 +552,7 @@ async function writeEntry(){
     updateAiProfile(urdu,bullets);
     document.getElementById('bulletsInput').value='';
     pendingPhotos=[]; renderPhotos('main');
-    activeEntryId=entry.id; showToast('Diary saved ✓'); openDetail(entry);
+    activeEntryId=entry.id; openDetail(entry); autoBackup();
   }catch(e){
     if(e.message==='no_key')openApiModal();
     else showToast('Error — please try again');
@@ -586,7 +586,7 @@ async function saveFallbackEntry(){
   document.getElementById('fallbackUrdu').value='';
   pendingPhotos=[]; renderPhotos('main');
   hideFallback();
-  activeEntryId=entry.id; showToast('Diary saved ✓'); openDetail(entry);
+  activeEntryId=entry.id; openDetail(entry); autoBackup();
 }
 
 // ── PASTE MODE ──
@@ -601,7 +601,7 @@ async function savePasteEntry(){
   document.getElementById('pasteUrdu').value='';
   document.getElementById('pasteBullets').value='';
   pendingPhotosPaste=[]; renderPhotos('paste');
-  activeEntryId=entry.id; showToast('Diary saved ✓'); openDetail(entry);
+  activeEntryId=entry.id; openDetail(entry); autoBackup();
 }
 
 // ── PHOTOS ──
@@ -702,14 +702,22 @@ function confirmClear(){
 }
 
 // ── EXPORT / IMPORT ──
-function exportData(){
+function exportData(silent=false){
   const data={version:2,exported:new Date().toISOString(),entries,profile,aiProfile};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;
   a.download='roznamcha-backup-'+new Date().toISOString().split('T')[0]+'.json';
   a.click();URL.revokeObjectURL(url);
-  showToast('Backup exported ✓');
+  if(!silent)showToast('Backup exported ✓');
+}
+
+function autoBackup(){
+  // Small delay so entry save completes first
+  setTimeout(()=>{
+    exportData(true);
+    showToast('Entry saved & backup downloaded ✓');
+  }, 800);
 }
 function importData(e){
   const file=e.target.files[0];if(!file)return;
